@@ -26,8 +26,8 @@ jobs:
       - name: Get paths to revalidate
         id: paths-to-revalidate
         run: |
-          paths_to_revalidate=${{ contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && '\\"*\\"' || toJSON(steps.changed-files.outputs.all_changed_files) }} | sed 's/.mdx//g' | sed 's/\/index//g'
-          echo "paths=$paths_to_revalidate" >> $GITHUB_OUTPUT
+          paths_to_revalidate=$(${{ contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && '\\"*\\"' || toJSON(steps.changed-files.outputs.all_changed_files) }} | sed 's/.mdx//g' | sed 's/\/index//g')
+          echo "paths=$paths_to_revalidate" >> "$GITHUB_OUTPUT"
 
       
       - name: Echo
