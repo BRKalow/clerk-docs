@@ -1,0 +1,36 @@
+name: Revalidate Production Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+
+jobs:
+  trigger_revalidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 10 # Fetch more than just the latest commit so we can accurately compare
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v37
+        with:
+          files: docs/**
+
+      - name: Echo
+        run: |
+          echo ${{ contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && '\\"*\\"' || toJSON(steps.changed-files.outputs.all_changed_files) }}
+
+      # - name: Trigger Revalidate
+      #   env:
+      #     PATHS_TO_REVALIDATE: contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && "*" || steps.changed-files.outputs.all_changed_files
+      #   run: |
+      #     curl -X POST https://new-docs.clerkpreview.com/api/revalidate-docs \
+      #       -H "Content-Type: application/json" \
+      #       -H "Authorization: Bearer ${{ secrets.REVALIDATE_DOCS_SECRET }}" \
+      #       -d '{"paths": ${{ toJson(steps.changed-files.outputs.all_changed_files) }}}'
