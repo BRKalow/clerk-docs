@@ -21,6 +21,7 @@ jobs:
         uses: tj-actions/changed-files@v37
         with:
           files: docs/**
+          json: true
 
       - name: Echo
         run: |
