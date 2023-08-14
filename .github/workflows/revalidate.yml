@@ -24,6 +24,7 @@ jobs:
 
       - name: Echo
         run: |
+          echo ${{ toJson(steps.changed-files.outputs.all_changed_files) }}
           echo ${{ contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && '\\"*\\"' || toJSON(steps.changed-files.outputs.all_changed_files) }}
 
       # - name: Trigger Revalidate
