@@ -29,16 +29,9 @@ jobs:
           paths_to_revalidate=$(echo ${{ contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && '\\"*\\"' || toJSON(steps.changed-files.outputs.all_changed_files) }} | sed 's/.mdx//g' | sed 's/\/index//g')
           echo "paths=$paths_to_revalidate" >> "$GITHUB_OUTPUT"
 
-      
-      - name: Echo
+      - name: Trigger revalidate
         run: |
-          echo ${{ steps.paths-to-revalidate.outputs.paths }}
-
-      # - name: Trigger revalidate
-      #   env:
-      #     PATHS_TO_REVALIDATE: contains(steps.changed-files.outputs.all_changed_files, 'docs/manifest.json') && "*" || steps.changed-files.outputs.all_changed_files
-      #   run: |
-      #     curl -X POST https://new-docs.clerkpreview.com/api/revalidate-docs \
-      #       -H "Content-Type: application/json" \
-      #       -H "Authorization: Bearer ${{ secrets.REVALIDATE_DOCS_SECRET }}" \
-      #       -d '{"paths": ${{ toJson(steps.changed-files.outputs.all_changed_files) }}}'
+          curl -X POST https://new-docs.clerkpreview.com/api/revalidate-docs \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_DOCS_SECRET }}" \
+            -d '{"paths": ${{ toJson(steps.changed-files.outputs.all_changed_files) }}}'
