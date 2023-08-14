@@ -34,4 +34,4 @@ jobs:
           curl -X POST https://new-docs.clerkpreview.com/api/revalidate-docs \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.REVALIDATE_DOCS_SECRET }}" \
-            -d '{"paths": ${{ toJson(steps.changed-files.outputs.all_changed_files) }}}'
+            -d '{"paths": ${{ steps.paths-to-revalidate.outputs.paths }}}'
