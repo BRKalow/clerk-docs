@@ -10,10 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Echo
+        run: echo "${{ toJson(github.event) }}"
       - name: Checkout fork
+        id: checkout-fork
         if: ${{ github.event.pull_request.head.repo.fork == 'true' }}
         run: |
           git_branch=$(git rev-parse --abbrev-ref HEAD)
           git push origin $git_branch
-      - name: Echo
-        run: echo ${{ toJson(github.event) }}
+          echo "branch=$git_branch" >> $GITHUB_OUTPUT
+      - name: Trigger deploy
+        env:
+          DOCS_BRANCH: ${{ steps.checkout-fork.outputs.branch || github.event.pull_request.head.ref }}
+        run: |
+          echo "$DOCS_BRANCH"
