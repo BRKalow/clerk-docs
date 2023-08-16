@@ -1,0 +1,19 @@
+name: Deploy Preview
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  deploy:
+    if: ${{ github.event.label.name == 'deploy-preview' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          git_branch=$(git rev-parse --abbrev-ref HEAD)
+          git push origin $git_branch
+      - name: Echo
+        run: echo ${{ github.event }}
