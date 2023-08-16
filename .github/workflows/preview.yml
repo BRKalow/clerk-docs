@@ -16,4 +16,4 @@ jobs:
           git_branch=$(git rev-parse --abbrev-ref HEAD)
           git push origin $git_branch
       - name: Echo
-        run: echo ${{ github.event }}
+        run: echo ${{ toJson(github.event) }}
