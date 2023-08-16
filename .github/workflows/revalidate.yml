@@ -1,5 +1,8 @@
 name: Revalidate Production Pages
 
+env:
+  CLERK_COM_BASE_URL: https://new-docs.clerkpreview.com
+
 on:
   push:
     branches:
@@ -31,7 +34,7 @@ jobs:
 
       - name: Trigger revalidate
         run: |
-          curl -X POST https://new-docs.clerkpreview.com/api/revalidate-docs \
+          curl -X POST ${{ env.CLERK_COM_BASE_URL }}/api/revalidate-docs \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.REVALIDATE_DOCS_SECRET }}" \
-            -d '{"paths": ${{ steps.paths-to-revalidate.outputs.paths }}}'
+            -d "{\"paths\": ${{ steps.paths-to-revalidate.outputs.paths }}}"
