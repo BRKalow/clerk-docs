@@ -6,11 +6,12 @@ on:
 
 jobs:
   deploy:
+    if: ${{ github.event.label.name == 'deploy-preview' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout fork
-        if: ${{ github.event.pull_request.head.repo.fork }}
+        if: ${{ github.event.pull_request.head.repo.fork == 'true' }}
         run: |
           git_branch=$(git rev-parse --abbrev-ref HEAD)
           git push origin $git_branch
