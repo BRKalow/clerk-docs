@@ -66,7 +66,7 @@ jobs:
       - name: Create preview comment - baking
         uses: marocchino/sticky-pull-request-comment@v2.8.0
         with:
-          GITHUB_TOKEN: ${{ secrets.CLERK_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           number: ${{ github.event.pull_request.number }}
           header: ${{ env.COMMENT_HEADER}}
           message: |
@@ -90,7 +90,7 @@ jobs:
       - name: Create preview comment - deployed
         uses: marocchino/sticky-pull-request-comment@v2.8.0
         with:
-          GITHUB_TOKEN: ${{ secrets.CLERK_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           number: ${{ github.event.pull_request.number }}
           header: ${{ env.COMMENT_HEADER }}
           message: |
@@ -134,7 +134,7 @@ jobs:
         if: ${{ steps.find-comment.outputs.comment-id != 0 }}
         uses: marocchino/sticky-pull-request-comment@v2.8.0
         with:
-          GITHUB_TOKEN: ${{ secrets.CLERK_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           number: ${{ github.event.pull_request.number }}
           header: ${{ env.COMMENT_HEADER }}
           message: |
