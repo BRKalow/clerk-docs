@@ -6,6 +6,9 @@ on:
 
 jobs:
   deploy:
+    permissions:
+      contents: write
+      pull-requests: write
     if: ${{ github.event.label.name == 'deploy-preview' }}
     runs-on: ubuntu-latest
 
