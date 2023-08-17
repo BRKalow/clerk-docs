@@ -46,7 +46,7 @@ jobs:
           repository: clerkinc/clerk-marketing
           token: ${{ secrets.CLERK_GH_TOKEN }}
           path: app
-          ref: production
+          ref: brk.feat/render-mdx-prod
 
       - run: npm install --global vercel@latest
 
@@ -58,9 +58,9 @@ jobs:
         env:
           DOCS_BRANCH: ${{ steps.checkout-fork.outputs.branch || github.event.pull_request.head.ref }}
         run: |
-          # cd app
+          cd app
           git checkout -b preview/$DOCS_BRANCH
-          vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH > deployment_url.txt
+          vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH --no-wait > deployment_url.txt
           echo "url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
 
       - name: Create preview comment - baking
