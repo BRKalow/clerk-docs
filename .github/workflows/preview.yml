@@ -29,8 +29,30 @@ jobs:
           git_branch=$(git rev-parse --abbrev-ref HEAD)
           git push origin $git_branch
           echo "branch=$git_branch" >> $GITHUB_OUTPUT
-      - name: Trigger deploy
+
+      - name: Checkout application
+        uses: actions/checkout@v3.5.3
+        with:
+          repository: clerkinc/clerk-marketing
+          token: ${{ secrets.CLERK_GH_TOKEN }}
+          path: app
+          ref: production
+
+      - run: npm install --global vercel@latest
+
+      - name: Pull vercel environment information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+    
+      - name: Deploy to Vercel
+        id: vercel-deploy
         env:
           DOCS_BRANCH: ${{ steps.checkout-fork.outputs.branch || github.event.pull_request.head.ref }}
         run: |
-          echo "$DOCS_BRANCH"
+          cd app
+          git checkout -b preview/${{ github.event.pull_request.head.sha }}
+          echo vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH --no-wait > deployment_url.txt
+          echo "url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
+      
+      - name: Echo deployment URL
+        run: |
+          echo "{{ steps.vercel-deploy.outputs.url }}"
