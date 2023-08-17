@@ -143,4 +143,6 @@ jobs:
             | Status | Preview | Updated (UTC) |
             | :-- | :-- | :-- |
             | :cookie: Updated | [Visit preview](${{ env.CLERK_COM_BASE_URL }}/docs) | ${{ env.DATE }} |
+
+            <!-- deployed:true -->
             
