@@ -100,6 +100,8 @@ jobs:
             | :-- | :-- | :-- |
             | :cookie: Deployed | [Visit preview](${{ steps.vercel-wait-for-deploy.outputs.stable_url }}/docs) | ${{ env.DATE }} |
 
+            <!-- deployed:true -->
+
   revalidate:
     if: ${{ github.event.action == 'synchronize' }}
     runs-on: ubuntu-latest
@@ -109,11 +111,19 @@ jobs:
     env:
       CLERK_COM_BASE_URL: https://docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com
     steps:
+      - name: Find comment
+        uses: peter-evans/find-comment@v2.4.0
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: deployed:true
+        
       - name: Get date
         run: |
           echo "DATE=$(date -u +"%b %d, %Y %I:%M %p")" >> $GITHUB_ENV
 
       - name: Trigger revalidate
+        if: ${{ steps.find-comment.outputs.comment-id != 0 }}
         run: |
           curl -X POST ${{ env.CLERK_COM_BASE_URL }}/api/revalidate-docs \
             -H "Content-Type: application/json" \
@@ -121,6 +131,7 @@ jobs:
             -d "{\"paths\": \"*\"}"
 
       - name: Create preview comment - deployed
+        if: ${{ steps.find-comment.outputs.comment-id != 0 }}
         uses: marocchino/sticky-pull-request-comment@v2.8.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
