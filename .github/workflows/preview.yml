@@ -33,13 +33,13 @@ jobs:
           git push origin $git_branch
           echo "branch=$git_branch" >> $GITHUB_OUTPUT
 
-      - name: Checkout application
-        uses: actions/checkout@v3.5.3
-        with:
-          repository: clerkinc/clerk-marketing
-          token: ${{ secrets.CLERK_GH_TOKEN }}
-          path: app
-          ref: production
+      # - name: Checkout application
+      #   uses: actions/checkout@v3.5.3
+      #   with:
+      #     repository: clerkinc/clerk-marketing
+      #     token: ${{ secrets.CLERK_GH_TOKEN }}
+      #     path: app
+      #     ref: production
 
       - run: npm install --global vercel@latest
 
@@ -53,7 +53,7 @@ jobs:
         run: |
           cd app
           git checkout -b preview/${{ github.event.pull_request.head.sha }}
-          echo vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH --no-wait > deployment_url.txt
+          echo "vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH --no-wait > deployment_url.txt"
           echo "url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
       
       - name: Echo deployment URL
