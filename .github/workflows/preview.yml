@@ -84,9 +84,8 @@ jobs:
       - name: Wait for deployment
         id: vercel-wait-for-deploy
         run: |
-          vercel switch --token=${{ secrets.VERCEL_TOKEN }} clerk-production
-          vercel inspect --token=${{ secrets.VERCEL_TOKEN }} --wait ${{ steps.vercel-deploy.outputs.url }}
-          vercel alias set ${{ steps.vercel-deploy.outputs.url }} docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com --token=${{ secrets.VERCEL_TOKEN }}
+          vercel inspect --token=${{ secrets.VERCEL_TOKEN }} --wait ${{ steps.vercel-deploy.outputs.url }} --scope clerk-production
+          vercel alias set ${{ steps.vercel-deploy.outputs.url }} docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com --token=${{ secrets.VERCEL_TOKEN }} --scope clerk-production
           echo "stable_url=https://docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com" >> $GITHUB_OUTPUT
       
       - name: Create preview comment - deployed
