@@ -5,7 +5,7 @@ env:
 
 on:
   pull_request_target:
-    types: [labeled]
+    types: [labeled, synchronize]
 
 jobs:
   deploy:
@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    if: ${{ github.event.label.name == 'deploy-preview' }}
+    if: ${{ github.event.action == 'labeled' && github.event.label.name == 'deploy-preview' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -26,19 +26,6 @@ jobs:
       - name: Get date
         run: |
           echo "DATE=$(date -u +"%b %d, %Y %I:%M %p")" >> $GITHUB_ENV
-    
-      - name: Create preview comment
-        uses: marocchino/sticky-pull-request-comment@v2.8.0
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          number: ${{ github.event.pull_request.number }}
-          header: ${{ env.COMMENT_HEADER}}
-          message: |
-            Hey @${{ github.event.sender.login }}, your docs preview is currently baking and should be available shortly.
-
-            | Clerk docs preview | Updated |
-            | :-- | :-- |
-            | :cook: _Baking..._ | ${{ env.DATE }} |
       
       - uses: actions/checkout@v3.5.3
 
@@ -75,13 +62,32 @@ jobs:
           git checkout -b preview/$DOCS_BRANCH
           echo "vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH > deployment_url.txt"
           echo "url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
-          sleep 60
+
+      - name: Create preview comment - baking
+        uses: marocchino/sticky-pull-request-comment@v2.8.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          header: ${{ env.COMMENT_HEADER}}
+          message: |
+            Hey @${{ github.event.sender.login }}, your docs preview is currently baking and should be available shortly.
+
+            | Status | Preview | Updated (UTC) |
+            | :-- | :-- | :-- |
+            | :cook: _Baking..._ | [Inspect](${{ steps.vercel-deploy.outputs.url }}) | ${{ env.DATE }} |
       
       - name: Get date
         run: |
           echo "DATE=$(date -u +"%b %d, %Y %I:%M %p")" >> $GITHUB_ENV
+
+      - name: Wait for deployment
+        id: vercel-wait-for-deploy
+        run: |
+          echo "vercel inspect --token=${{ secrets.VERCEL_TOKEN }} --wait $(${{ steps.vercel-deploy.outputs.url }}"
+          echo "vercel alias set ${{ steps.vercel-deploy.outputs.url }} docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com --token=${{ secrets.VERCEL_TOKEN }}"
+          echo "stable_url=https://docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com" >> $GITHUB_OUTPUT
       
-      - name: Create preview comment
+      - name: Create preview comment - deployed
         uses: marocchino/sticky-pull-request-comment@v2.8.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,6 +96,40 @@ jobs:
           message: |
             Hey @${{ github.event.sender.login }}, your docs preview is available.
 
-            | Clerk docs preview | Updated |
-            | :-- | :-- |
-            | :cookie: ${{ steps.vercel-deploy.outputs.url }} | ${{ env.DATE }} |
+            | Status | Preview | Updated (UTC) |
+            | :-- | :-- | :-- |
+            | :cookie: Deployed | [Visit preview](${{ steps.vercel-wait-for-deploy.outputs.stable_url }}/docs) | ${{ env.DATE }} |
+
+  revalidate:
+    if: ${{ github.event.action == 'synchronize' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      CLERK_COM_BASE_URL: https://docs-preview-${{ github.event.pull_request.number }}.clerkpreview.com
+    steps:
+      - name: Get date
+        run: |
+          echo "DATE=$(date -u +"%b %d, %Y %I:%M %p")" >> $GITHUB_ENV
+
+      - name: Trigger revalidate
+        run: |
+          curl -X POST ${{ env.CLERK_COM_BASE_URL }}/api/revalidate-docs \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.REVALIDATE_DOCS_SECRET }}" \
+            -d "{\"paths\": \"*\"}"
+
+      - name: Create preview comment - deployed
+        uses: marocchino/sticky-pull-request-comment@v2.8.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          header: ${{ env.COMMENT_HEADER }}
+          message: |
+            Hey @${{ github.event.sender.login }}, your docs preview is available.
+
+            | Status | Preview | Updated (UTC) |
+            | :-- | :-- | :-- |
+            | :cookie: Updated | [Visit preview](${{ env.CLERK_COM_BASE_URL }}/docs) | ${{ env.DATE }} |
+            
