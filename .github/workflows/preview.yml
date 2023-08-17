@@ -1,5 +1,8 @@
 name: Deploy Preview
 
+env:
+  COMMENT_HEADER: clerk-docs-preview
+
 on:
   pull_request_target:
     types: [labeled]
@@ -19,6 +22,23 @@ jobs:
       - name: Echo
         run: |
           echo "${{ toJson(github.event) }}"
+      
+      - name: Get date
+        run: |
+          echo "DATE=$(date -u +"%b %d, %Y %I:%M %p")" >> $GITHUB_ENV
+    
+      - name: Create preview comment
+        uses: marocchino/sticky-pull-request-comment@v2.8.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          header: ${{ env.COMMENT_HEADER}}
+          message: |
+            Hey @${{ github.event.sender.login }}, your docs preview is currently baking and should be available shortly.
+
+            | Clerk docs preview | Updated |
+            | :-- | :-- |
+            | :cook: _Baking..._ | ${{ env.DATE }} |
       
       - uses: actions/checkout@v3.5.3
 
@@ -43,7 +63,7 @@ jobs:
 
       - run: npm install --global vercel@latest
 
-      - name: Pull vercel environment information
+      - name: Pull Vercel environment information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
     
       - name: Deploy to Vercel
@@ -52,10 +72,24 @@ jobs:
           DOCS_BRANCH: ${{ steps.checkout-fork.outputs.branch || github.event.pull_request.head.ref }}
         run: |
           # cd app
-          git checkout -b preview/${{ github.event.pull_request.head.sha }}
-          echo "vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH --no-wait > deployment_url.txt"
+          git checkout -b preview/$DOCS_BRANCH
+          echo "vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH > deployment_url.txt"
           echo "url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
+          sleep 60
       
-      - name: Echo deployment URL
+      - name: Get date
         run: |
-          echo "{{ steps.vercel-deploy.outputs.url }}"
+          echo "DATE=$(date -u +"%b %d, %Y %I:%M %p")" >> $GITHUB_ENV
+      
+      - name: Create preview comment
+        uses: marocchino/sticky-pull-request-comment@v2.8.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          header: ${{ env.COMMENT_HEADER }}
+          message: |
+            Hey @${{ github.event.sender.login }}, your docs preview is available.
+
+            | Clerk docs preview | Updated |
+            | :-- | :-- |
+            | :cookie: ${{ steps.vercel-deploy.outputs.url }} | ${{ env.DATE }} |
