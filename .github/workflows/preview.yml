@@ -51,7 +51,7 @@ jobs:
         env:
           DOCS_BRANCH: ${{ steps.checkout-fork.outputs.branch || github.event.pull_request.head.ref }}
         run: |
-          cd app
+          # cd app
           git checkout -b preview/${{ github.event.pull_request.head.sha }}
           echo "vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --build-env DOCS_BRANCH=$DOCS_BRANCH --env DOCS_BRANCH=$DOCS_BRANCH --no-wait > deployment_url.txt"
           echo "url=$(cat deployment_url.txt)" >> $GITHUB_OUTPUT
